@@ -138,10 +138,12 @@ io.on("connection", async (socket)=> {
         };
         sessionData.players[data.gameWith]={
           progress: [],
+         
           Total_Score:0
         }
         sessionData.players[data.gameFrom]={
           progress: [],
+         
           Total_Score:0
         }
 
@@ -364,6 +366,7 @@ io.on("connection", async (socket)=> {
              
               gameData: sessionData,
               sessionId:sessionId,
+              exit:leftGame,
              
             });
 
@@ -372,6 +375,7 @@ io.on("connection", async (socket)=> {
              
               gameData: sessionData,
               sessionId:sessionId,
+              exit:leftGame,
             });
           }
         });

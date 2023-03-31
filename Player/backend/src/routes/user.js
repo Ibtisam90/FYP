@@ -151,10 +151,12 @@ router.get("/friends/:userId", async (req, res) => {
         return User.findById(friendId);
       })
     );
+   
     let friendList = [];
+   
     friends.map((friend) => {
-      const { _id, firstName, lastName, username, email, profilePicture } =
-        friend;
+      if(friend){
+      const { _id, firstName, lastName, username, email, profilePicture } =  friend;
       friendList.push({
         _id,
         firstName,
@@ -163,9 +165,12 @@ router.get("/friends/:userId", async (req, res) => {
         email,
         profilePicture,
       });
+    }
     });
+    
     res.status(200).json(friendList);
   } catch (err) {
+    console.log("err to show friends");
     res.status(500).json(err);
   }
 });
@@ -186,8 +191,8 @@ router.get("/onlineFriends/:userId/:onlineUser", async (req, res) => {
     );
     let onlineFriendList = [];
     friends.map((friend) => {
-      const { _id, firstName, lastName, username, email, profilePicture } =
-        friend;
+      if(friend){
+      const { _id, firstName, lastName, username, email, profilePicture } =  friend;
         // console.log("Friends Id: ",_id, "--> ",req.params.onlineUser.includes(_id));
         if(req.params.onlineUser.includes(_id)){
           onlineFriendList.push({
@@ -198,7 +203,7 @@ router.get("/onlineFriends/:userId/:onlineUser", async (req, res) => {
         email,
         profilePicture,
       });
-    }
+    }}
     });
     res.status(200).json(onlineFriendList);
   } catch (err) {
@@ -219,6 +224,7 @@ router.get("/friendRequests/:userId", async (req, res) => {
     );
     let friendList = [];
     friends.map((friend) => {
+      if(friend){
       const { _id, firstName, lastName, username, email, profilePicture } =
         friend;
       friendList.push({
@@ -229,6 +235,7 @@ router.get("/friendRequests/:userId", async (req, res) => {
         email,
         profilePicture,
       });
+    }
     });
     res.status(200).json(friendList);
   } catch (err) {
@@ -282,56 +289,110 @@ router.get("/nonFriends/:userId", async (req, res) => {
   }
 });
 
-// Edit the profile of user
-router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
-  // router.post("/:id/edit" ,async (req, res) => {
-  
-  // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
-  //   if (error) throw error;
-  
-  //   // Convert the data to a base64-encoded string
-  //   const encoded = Buffer.from(data).toString('base64');
 
-  let keepGoing=false;
-  
-   User.findOne({_id: req.params.id})
-            .exec((error, user) => {
-              if(user.authenticate(req.body.OldPassword)){
-                keepGoing=true
-
-                User.findOneAndUpdate(
-                  { _id: req.params.id },
-                  {
-                    $set: {
-                       hash_password: bcrypt.hashSync(req.body.NewPassword, 10) ,
-                        
-                      },
-                      $set: {
-                        profilePicture: req.file.filename,
-                      },
-              
-                  },
-                  { new: true },
-                  (err, ans) => {
-                    if (err) {
-                      res.send(err);
-                    } else{
-                      console.log(ans);
-                      return res.status(200).json(ans);
-                    }
-                  }
-                );
-
-              }
-              else{
-                keepGoing=false;
-                return res.status(400).json(
-                  "Incorrect Old Password"
-                );
-              }
-
-            });
+router.get("/reqNum/:userId", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    const friendRequestCount = user.friendRequests.length;
+    res.status(200).json({ friendRequestCount });
+  } catch (err) {
+    res.status(500).json(err);  
+  }
 });
 
+// Edit the profile of user
+// router.post("/:id/edit",upload.single('UserImage') ,async (req, res) => {
+//   // router.post("/:id/edit" ,async (req, res) => {
+  
+//   // fs.readFile('./public/uploads/'+req.file.filename, (error, data) => {
+//   //   if (error) throw error;
+  
+//   //   // Convert the data to a base64-encoded string
+//   //   const encoded = Buffer.from(data).toString('base64');
+
+//   let keepGoing=false;
+  
+//    User.findOne({_id: req.params.id})
+//             .exec((error, user) => {
+//               if(user.authenticate(req.body.OldPassword)){
+//                 keepGoing=true
+
+//                 User.findOneAndUpdate(
+//                   { _id: req.params.id },
+//                   {
+//                     $set: {
+//                        hash_password: bcrypt.hashSync(req.body.NewPassword, 10) ,
+                        
+//                       },
+//                       $set: {
+//                         profilePicture: req.file.filename,
+//                       },
+              
+//                   },
+//                   { new: true },
+//                   (err, ans) => {
+//                     if (err) {
+//                       res.send(err);
+//                     } else{
+//                       console.log(ans);
+//                       return res.status(200).json(ans);
+//                     }
+//                   }
+//                 );
+
+//               }
+//               else{
+//                 keepGoing=false;
+//                 return res.status(400).json(
+//                   "Incorrect Old Password"
+//                 );
+//               }
+
+//             });
+// });
+
+
+// API to update user password
+router.post("/:id/update-password", async (req, res) => {
+  console.log("update password ")
+  // Check if old password is correct
+  const user = await User.findOne({_id: req.params.id});
+  if (user.authenticate(req.body.OldPassword)) {
+    // Update password
+    const updatedUser = await User.findOneAndUpdate(
+      {_id: req.params.id},
+      { $set: { hash_password: bcrypt.hashSync(req.body.NewPassword, 10) } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  } else {
+    return res.status(400).json({message:"Incorrect Old Password"})
+  }
+});
+
+// API to update user profile picture
+// API to update user profile picture
+router.post("/:id/update-profile-picture", upload.single('UserImage'), async (req, res) => {
+  const user = await User.findOne({_id: req.params.id});
+
+  // Check if the request contains a file
+  if (req.file) {
+    // Update profile picture
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { profilePicture: req.file.filename } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  } else {
+    // Keep previous profile picture if no new photo is uploaded
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: { profilePicture: user.profilePicture } },
+      { new: true }
+    );
+    return res.status(200).json(updatedUser);
+  }
+});
 
 module.exports = router;

@@ -589,6 +589,10 @@ router.get('/questions/:topic/:easyno/:mediumno/:hardno', (req, res) => {
         // Update the skill level for the topic
         if(score>10){
           foundPlayer.personalTopics[topicIndex].assessmentCompleted=true
+
+          if(topicIndex+1!=foundPlayer.personalTopics.length){
+            foundPlayer.personalTopics[topicIndex+1].locked=false
+          }
         }
         foundPlayer.personalTopics[topicIndex].stage = nextStage;
         if(foundPlayer.personalTopics[topicIndex].stage >= "S1" && foundPlayer.personalTopics[topicIndex].stage<="S4"){
