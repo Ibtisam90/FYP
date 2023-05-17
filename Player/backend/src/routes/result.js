@@ -40,12 +40,13 @@ router.post('/AddResult', async (req, res) => {
     });
     // const totalScore = await axios.get(`http://localhost:3000/api/calculateResult/${stage}/${optionsRes}`)
     
+    const nextStage=calculateNextStage(parseInt(myScore.data.percentageScore),stage)
     
  
-    const result = new Result({ player, Options_Res: optionsRes, Total_Score: parseInt(myScore.data.totalScore)});
+    const result = new Result({ player, Options_Res: optionsRes, Total_Score: parseInt(myScore.data.totalScore), stage:nextStage});
     
     await result.save();
-    const nextStage=calculateNextStage(parseInt(myScore.data.percentageScore),stage)
+    
     const updatedPlayer= await axios.post('http://localhost:3000/api/updateSkill', {
       player: player,
       nextStage: nextStage,

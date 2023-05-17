@@ -5,6 +5,14 @@ const QuestionSchema = new mongoose.Schema({
         type: String,
         required:true,
     },
+    noOfInputs: {
+      type:Number,
+      default:0,
+    },
+    inputVal: {
+      type:String,
+      default:"",
+    },
     correctAnswer: {
         type: String,
         required:true,
